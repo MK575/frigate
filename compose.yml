@@ -1,0 +1,32 @@
+services:
+  frigate: # Latest frigate configuration is at https://docs.frigate.video/frigate/installation#docker
+    
+    deploy:    # Nvidia GPU support
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+#              device_ids: ['0']
+              count: 1 # number of GPUs
+              capabilities: [gpu]
+              
+  ha:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ha
+    network_mode: npm
+    privileged: true
+    volumes:
+      - ./ha:/config
+    ports:
+      - 8123:8123
+    restart: unless-stopped
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt
+    network_mode: ha
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: always
