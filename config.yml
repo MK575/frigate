@@ -1,0 +1,53 @@
+mqtt:
+  host: mqtt # The hostname of mqtt in the docker compose file
+  topic_prefix: frigate
+
+objects:
+  track:
+    - person
+    - cat
+    - dog
+
+go2rtc:
+  streams:
+    go2rtcTestName:
+      - ffmpeg:rtsp://ip:port
+
+cameras:
+  driveway: # <------ Name the camera
+    enabled: true
+    ffmpeg:
+      hwaccel_args: preset-nvidia-h264 # replace with your specs or comment out the line entirely
+      output_args:
+        record: preset-record-generic-audio-aac
+      inputs:
+        - path: rtsp://127.0.0.1:8554/go2rtcTestName # <----- The stream you want to use for detection
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280 #replace with your camera's width/height
+      height: 720
+      fps: 5
+
+
+#nvidia detector
+detectors:
+  tensorrt:
+    type: tensorrt
+    device: 0 #This is the default, select the first GPU
+model:
+  path: /config/model_cache/tensorrt/yolov7-320.trt
+  input_tensor: nchw
+  input_pixel_format: rgb
+  width: 320
+  height: 320
+##
+
+#review:
+#  alerts:
+#    required_zones:
+#      - driveway_zone #do not add your zone here until you have created it in the ui
+
+version: 0.14
